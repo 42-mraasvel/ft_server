@@ -1,0 +1,1 @@
+sudo cp nginx.conf /usr/share/nginx
