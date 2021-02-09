@@ -25,3 +25,28 @@ INSTALL NGINX DEBIAN:BUSTER
 		RUN apt-get -y install wget
 
 		RUN apt-get -y install nginx
+
+INSTALL MARIADB DEBIAN:BUSTER
+
+	NORMAL TERMINAL:
+
+		apt-get -y install mariadb-server
+
+		More secure ?:
+			mysql_secure_installation
+
+		Grant access to specific database to a specific user"
+			GRANT ALL ON example_database.* TO 'example_user'@'localhost' IDENTIFIED BY 'password' WITH GRANT OPTION;
+		Ensure changes are current:
+			FLUSH PRIVILEGES;
+
+INSTALL PHP DEBIAN:BUSTER
+
+need php-fpm for nginx
+
+	NORMAL TERMINAL:
+
+		apt-get -y install php-fpm php-mysql
+
+
+Configure NginX to use the PHP processor
