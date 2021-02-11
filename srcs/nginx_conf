@@ -18,14 +18,12 @@ server {
 
   # SSL setting and certificate/key locations
 	ssl on;
-	# add this at the end
-	# include snippets/ssl-params.conf
-	ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
-	ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+	ssl_certificate /etc/ssl/certs/ft_server.crt;
+	ssl_certificate_key /etc/ssl/private/ft_server.key;
 
   # Root = folder where html/php (source) files are located
 	root /var/www/html/;
-	autoindex on;
+	autoindex off;
 	index index.php index.html index.htm;
 
 
