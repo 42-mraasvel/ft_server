@@ -1,0 +1,43 @@
+server {
+  # Listen to port 80 (http)
+	listen 80;
+	listen [::]:80;
+
+	server_name localhost www.localhost;
+
+  # Return 301 means to redirect to https (SSL) version in this case
+	return 301 https://$host$request_uri;
+}
+
+server {
+  # Listen to port 443 (https / SSL)
+	listen 443 ssl;
+	listen [::]:443 ssl;
+
+	server_name localhost www.localhost;
+
+  # SSL setting and certificate/key locations
+	ssl on;
+	# add this at the end
+	# include snippets/ssl-params.conf
+	ssl_certificate /etc/ssl/certs/nginx-selfsigned.crt;
+	ssl_certificate_key /etc/ssl/private/nginx-selfsigned.key;
+
+  # Root = folder where html/php (source) files are located
+	root /var/www/html/;
+	autoindex on;
+	index index.php index.html index.htm;
+
+
+	location / {
+		# 1. try files, 2. try directors, 3. throw 404 error
+		try_files $uri $uri/ =404;
+	}
+
+  # FastCGI Proxying
+  # translate client requests for an application server that does not or should not handle client requests directly (PHP requests)
+	location ~ \.php$ {
+		include snippets/fastcgi-php.conf;
+		fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;
+	}
+}

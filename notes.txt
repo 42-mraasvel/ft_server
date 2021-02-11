@@ -33,12 +33,13 @@ INSTALL MARIADB DEBIAN:BUSTER
 		apt-get -y install mariadb-server
 
 		More secure ?:
+			mysql_install_db
 			mysql_secure_installation
 
-		Grant access to specific database to a specific user"
-			GRANT ALL ON example_database.* TO 'example_user'@'localhost' IDENTIFIED BY 'password' WITH GRANT OPTION;
-		Ensure changes are current:
-			FLUSH PRIVILEGES;
+		CREATE DATABASE wordpressdb;
+		CREATE USER wp_admin@localhost IDENTIFIED BY 'wpdb_password';
+		GRANT ALL PRIVILEGES ON wordpress_db.* TO wp_admin@localhost;
+		FLUSH PRIVILEGES;
 
 INSTALL PHP DEBIAN:BUSTER
 
@@ -48,5 +49,66 @@ need php-fpm for nginx
 
 		apt-get -y install php-fpm php-mysql
 
+	Docker:
 
-Configure NginX to use the PHP processor
+		RUN apt-get -y install php7.3 php-mysql php-fpm php-pdo php-gd php-cli php-mbstring
+		RUN wget https://files.phpmyadmin.net/phpMyAdmin/5.0.1/phpMyAdmin-5.0.1-english.tar.gz
+		RUN tar -xf phpMyAdmin-5.0.1-english.tar.gz && rm -rf phpMyAdmin-5.0.1-english.tar.gz
+		RUN mv phpMyAdmin-5.0.1-english /var/www/html/phpmyadmin
+
+
+Configure PHP:
+
+	change in myphpadmin/config.sample.inc.php:
+	$cfg['blowfish_secret'] = ''; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */
+	$cfg['blowfish_secret'] = 'abcdefghijklmnopqrstuvwxyz0123456789'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */
+	mv config.inc.php
+
+
+
+Configure NginX to use the PHP processor:
+
+	location ~ \.php$ {
+		include snippets/fastcgi-php.conf;
+		fastcgi_pass unix:/var/run/php/php7.3-fpm.sock;
+	}
+	Add this at the bottom of your server
+
+Install wordpress:
+
+	wget -y http://wordpress.org/latest.tar.gz
+	tar -xzvf latest.tar.gz
+	cp -a wordpress /var/www/wordpress (?)
+	Need php5-curl? or php-curl? libssh2-php // curl and sshp needed for wordpress?
+
+
+Configure Wordpress:
+
+	cp wp-config-sample.php wp-config.php (or create own config file, and copy it from srcs)
+	Can use sed -i for the following in this config file:
+		'database_name_here'
+		'username_here'
+		'password_here'
+	chown -R root:root wordpress/
+
+	He created a wordpress/wp-content/uploads directory
+
+	mysql wordpress -u root < root/wordpress.sql (already a set up wordpress db so a new one doesn't have to be set up)
+
+Generate self-signed key and certificate pair with OpenSSL
+
+	https://www.digitalocean.com/community/tutorials/how-to-create-a-self-signed-ssl-certificate-for-nginx-on-debian-10#prerequisites
+
+	Command:
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt -subj "/C=NL/ST=Noord-Holland/L=Amsterdam/O=Codam/OU=Codam/CN=fortytwo"
+		openssl req -x509 -nodes -days 365 -subj "/C=NL/ST=Noord-Holland/L=Amsterdam/O=Codam/OU=Codam/CN=fortytwo" -newkey rsa:2048 -keyout /etc/ssl/nginx-selfsigned.key -out /etc/ssl/nginx-selfsigned.crt;
+
+	# option to provide all necessary information with the command itself:
+		-subj "/C=NL/ST=Noord-Holland/L=Amsterdam/O=Codam/OU=Students/CN=localhost"
+
+		C: Country Name [2 letters]
+		ST : State or province (full name)
+		L : Locality Name (city)
+		O : Organization/Company name
+		OU : Organizational Unit (section)
+		CN = Common Name (domain or server IP)
